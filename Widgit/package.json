@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "RealBuddy productivity widget",
   "main": "main.js",
-  "author": "Parsa Ahmadizadeh",
+  "author": {
+    "name": "Parsa Ahmadizadeh",
+    "email": "parsa@example.com"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/Parsa-ahm/RealBuddy.git"
