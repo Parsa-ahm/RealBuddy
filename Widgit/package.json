@@ -21,7 +21,13 @@
     "appId": "com.realbuddy.app",
     "productName": "RealBuddy",
     "directories": { "output": "dist" },
-    "files": ["**/*", "!dist/**"],
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "assets/**/*"
+    ],
+    "publish": null,
     "win": { "target": ["nsis", "portable"], "icon": "assets/icon.ico" },
     "mac": { "target": ["dmg", "zip"], "icon": "assets/icon.png", "category": "public.app-category.productivity" },
     "linux": { "target": ["AppImage", "deb"], "icon": "assets/icon.png" },

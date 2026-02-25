@@ -23,6 +23,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3 libglib2.0-0 libgconf-2-4 libnss3 libxss1 libappindicator1 libindicator7 gconf-service libxext6 libxfixes3 libxrender1 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgcc1 libgdk-pixbuf2.0-0 libgegl-0.2-0 libglib2.0-0 libgomp1 libgstreamer0.10-0 libgstreamer-plugins-base0.10-0 libgtk-3-0 libgvfscommon libharfbuzz-gobject0 libjasper1 libjpeg-turbo8 libjpeg8 libnspr4 libpango-1.0-0 libpangocairo-1.0-0 libpango-gobject-1.0-0 libpixman-1-0 libpng12-0 libpulse0 librsvg2-2 libstdc++6 libthai0 libtiff5 libx11-6 libxau6 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxdmcp6 libxext6 libxfixes3 libxfont1 libxft2 libxi6 libxinerama1 libxkbcommon0 libxkbfile1 libxrandr2 libxrender1 libxslt1.1 libxtst6 libx11-6 libxdamage1 libxext6 libxrender1
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -53,11 +59,21 @@ jobs:
       contents: write
 
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
           merge-multiple: true
+
+      - name: Generate checksums
+        run: |
+          cd artifacts
+          find . -type f ! -name "*.sha256" -exec sha256sum {} + > SHA256SUMS
+          cat SHA256SUMS
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -65,6 +81,8 @@ jobs:
           tag_name: ${{ github.ref_name }}
           draft: false
           generate_release_notes: true
-          files: artifacts/**/*
+          files: |
+            artifacts/**/*
+            artifacts/SHA256SUMS
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
