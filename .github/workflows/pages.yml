@@ -26,6 +26,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Ensure we deploy after the default "pages build and deployment" workflow
+      # so our Website content wins over the README
+      - name: Wait for other Pages workflows
+        run: sleep 45
+
       - name: Inject repo URLs (no secrets — uses GitHub context)
         run: |
           REPO="${{ github.repository }}"
