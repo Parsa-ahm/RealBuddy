@@ -2,22 +2,29 @@ const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('path')
 const fs   = require('fs')
 
+const ALLOWED_DATA_FILES = ['tasks', 'logs', 'today', 'bounds']
+
 function dataPath(name) {
+  if (!ALLOWED_DATA_FILES.includes(name)) return null
   return path.join(app.getPath('userData'), name + '.json')
 }
 
 // ── JSON file I/O (used by renderer via IPC) ───────────────────────────────
 ipcMain.handle('read-json', (_e, name) => {
+  const p = dataPath(name)
+  if (!p) return null
   try {
-    return JSON.parse(fs.readFileSync(dataPath(name), 'utf8'))
+    return JSON.parse(fs.readFileSync(p, 'utf8'))
   } catch {
     return null
   }
 })
 
 ipcMain.handle('write-json', (_e, name, data) => {
+  const p = dataPath(name)
+  if (!p) return false
   try {
-    fs.writeFileSync(dataPath(name), JSON.stringify(data, null, 2), 'utf8')
+    fs.writeFileSync(p, JSON.stringify(data, null, 2), 'utf8')
     return true
   } catch {
     return false
@@ -57,6 +64,7 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      webSecurity: true,
       preload: path.join(__dirname, 'preload.js')
     }
   })

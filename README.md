@@ -17,6 +17,21 @@ A desktop productivity widget that helps you track daily habits with timers, str
 
 The widget features a dark theme with customizable accent colors, progress bars, and a mood indicator that reflects your streak status.
 
+## Download
+
+**Pre-built installers** are available on the [Releases](https://github.com/Parsa-ahm/RealBuddy/releases) page.
+
+- **Windows** — `.exe` installer or portable version
+- **macOS** — `.dmg` or `.zip`
+- **Linux** — `.AppImage` or `.deb`
+
+To publish a new release:
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+GitHub Actions will build installers for Windows, macOS, and Linux and attach them to the release.
+
 ## Installation
 
 ### From source
