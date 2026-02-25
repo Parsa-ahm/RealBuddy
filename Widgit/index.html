@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RealBuddy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@300;400&display=swap"
+        rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-family: 'Syne', sans-serif;
+            -webkit-app-region: drag;
+        }
+
+        .widget {
+            width: 370px;
+            background: #141416;
+            border-radius: 24px;
+            padding: 22px;
+            border: 1px solid #2a2a2d;
+            box-shadow: 0 24px 80px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04);
+            position: relative;
+            transition: box-shadow 1.2s ease;
+        }
+        .widget.streak-hot { box-shadow: 0 24px 80px rgba(0,0,0,.6), 0 0 50px -8px #ff6b35, inset 0 1px 0 rgba(255,255,255,.06); }
+        .widget.streak-fire { animation: fire-pulse 2s ease-in-out infinite; }
+        @keyframes fire-pulse {
+            0%,100% { box-shadow: 0 24px 80px rgba(0,0,0,.6), 0 0 65px -5px #ff4500, inset 0 1px 0 rgba(255,255,255,.08); }
+            50%      { box-shadow: 0 24px 80px rgba(0,0,0,.6), 0 0 95px 5px #ff6b35, inset 0 1px 0 rgba(255,255,255,.08); }
+        }
+        .widget.shake { animation: shake .45s ease !important; }
+        @keyframes shake {
+            0%,100% { transform: translateX(0) }
+            20%     { transform: translateX(-5px) }
+            40%     { transform: translateX(5px) }
+            60%     { transform: translateX(-3px) }
+            80%     { transform: translateX(3px) }
+        }
+
+        /* HEADER */
+        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+        .brand  { display: flex; align-items: center; gap: 8px; }
+        .brand-name { font-size: 16px; font-weight: 800; color: #f0f0f0; letter-spacing: -.02em; }
+        .brand-name span { color: #0078D4; }
+        .header-right { display: flex; align-items: center; gap: 7px; }
+        .streak-badge {
+            font-family: 'DM Mono', monospace; font-size: 11px; color: #ff6b35;
+            background: rgba(255,107,53,.1); border: 1px solid rgba(255,107,53,.2);
+            padding: 2px 7px; border-radius: 99px;
+        }
+        .progress-wrap { display: flex; align-items: center; gap: 5px; }
+        .progress-text { font-family: 'DM Mono', monospace; font-size: 11px; color: #888; }
+        .progress-bar  { width: 50px; height: 5px; background: #2a2a2d; border-radius: 99px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #0078D4, #00b4d8); border-radius: 99px; transition: width .5s ease; }
+        .mood-btn { font-size: 22px; cursor: pointer; background: none; border: none; line-height: 1; transition: transform .2s; }
+        .mood-btn:hover { transform: scale(1.2) rotate(-5deg); }
+
+        /* DATE */
+        .date-pill { font-family: 'DM Mono', monospace; font-size: 12px; color: #888; letter-spacing: .07em; text-transform: uppercase; margin-bottom: 2px; }
+        .subtitle  { font-size: 12px; color: #777; font-family: 'DM Mono', monospace; margin-bottom: 14px; transition: color .3s; }
+        .subtitle.warn { color: #e05555 !important; }
+
+        /* TASKS */
+        .tasks { display: flex; flex-direction: column; gap: 8px; }
+        .task {
+            background: #1c1c1f; border-radius: 14px; padding: 13px 15px;
+            border: 1px solid #2a2a2d; transition: all .3s ease; position: relative; overflow: hidden;
+        }
+        .task::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); border-radius: 99px 0 0 99px; opacity: .8; }
+        .task.done { opacity: .45; background: #111; }
+        .task.done .task-name { text-decoration: line-through; color: #666; }
+        .task.active { border-color: var(--accent); background: #1d1d1f; box-shadow: 0 0 22px -8px var(--accent); }
+        .task-top  { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .task-left { display: flex; align-items: center; gap: 10px; }
+        .task-icon { font-size: 17px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: #252527; border-radius: 8px; }
+        .task-name { font-size: 14px; font-weight: 700; color: #f0f0f0; letter-spacing: -.01em; }
+        .task-duration { font-family: 'DM Mono', monospace; font-size: 11px; color: #777; margin-top: 2px; }
+        .task-buttons { display: flex; gap: 5px; }
+        .btn { font-family: 'DM Mono', monospace; font-size: 11px; padding: 4px 9px; border-radius: 6px; border: 1px solid #444; background: transparent; color: #999; cursor: pointer; transition: all .2s; letter-spacing: .04em; }
+        .btn:hover { background: #252527; color: #ddd; border-color: #666; }
+        .btn.start { border-color: var(--accent); color: var(--accent); }
+        .btn.start:hover { background: var(--accent); color: #000; }
+        .btn.done-btn { border-color: #3a6a3a; color: #5cba5c; }
+        .btn.done-btn:hover { background: #1a3a1a; color: #7ada7a; }
+        .timer-bar  { height: 4px; background: #2a2a2d; border-radius: 99px; overflow: hidden; }
+        .timer-fill { height: 100%; background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent), white 30%)); border-radius: 99px; transition: width 1s linear; }
+        .timer-display { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent); text-align: right; margin-top: 4px; }
+
+        /* BOTTOM ROW */
+        .bottom-row { display: flex; gap: 6px; margin-top: 14px; }
+        .action-btn { flex: 1; padding: 9px; background: transparent; border: 1px dashed #333; border-radius: 10px; color: #666; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; transition: all .2s; }
+        .action-btn:hover { border-color: #666; color: #ccc; background: #111; }
+
+        /* SPARKLE */
+        .sparkle { position: fixed; pointer-events: none; font-size: 18px; animation: sparkle-fly .9s ease-out forwards; z-index: 9999; }
+        @keyframes sparkle-fly {
+            0%   { transform: translateY(0) scale(1) rotate(0deg); opacity: 1 }
+            100% { transform: translateY(-75px) scale(.3) rotate(180deg); opacity: 0 }
+        }
+
+        /* OVERLAYS */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.83); z-index: 200; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .overlay.hidden { display: none; }
+        .modal { background: #141416; border: 1px solid #2a2a2d; border-radius: 20px; padding: 22px; width: 330px; max-height: 82vh; overflow-y: auto; box-shadow: 0 30px 80px rgba(0,0,0,.8); }
+        .modal h2 { font-size: 16px; font-weight: 800; color: #f0f0f0; letter-spacing: -.02em; margin-bottom: 6px; }
+        .modal-sub { font-family: 'DM Mono', monospace; font-size: 12px; color: #888; margin-bottom: 14px; line-height: 1.5; }
+
+        /* EDIT / SETUP rows */
+        .edit-hint { font-family: 'DM Mono', monospace; font-size: 11px; color: #666; margin-bottom: 10px; }
+        .task-edit-item { background: #1a1a1d; border: 1px solid #2a2a2d; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+        .task-edit-item input { background: #111; border: 1px solid #444; border-radius: 7px; color: #eee; font-family: 'DM Mono', monospace; font-size: 12px; padding: 5px 8px; outline: none; transition: border-color .2s; }
+        .task-edit-item input:focus { border-color: #777; }
+        .icon-inp { width: 38px; text-align: center; }
+        .name-inp { flex: 1; min-width: 80px; }
+        .dur-inp  { width: 48px; }
+        .remove-btn { background: none; border: none; color: #666; cursor: pointer; font-size: 16px; transition: color .2s; margin-left: auto; }
+        .remove-btn:hover { color: #e05555; }
+        .accent-row { display: flex; gap: 4px; flex-wrap: wrap; }
+        .accent-swatch { width: 16px; height: 16px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: all .15s; }
+        .accent-swatch:hover, .accent-swatch.sel { border-color: #fff; transform: scale(1.2); }
+        .add-task-btn { width: 100%; padding: 9px; background: #1a1a1d; border: 1px dashed #444; border-radius: 10px; color: #777; font-family: 'DM Mono', monospace; font-size: 12px; cursor: pointer; transition: all .2s; margin-bottom: 12px; }
+        .add-task-btn:hover { border-color: #777; color: #bbb; }
+        .modal-btns { display: flex; gap: 8px; }
+        .modal-btn { flex: 1; padding: 10px; border-radius: 10px; font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: .05em; cursor: pointer; transition: all .2s; text-transform: uppercase; }
+        .modal-btn.cancel { background: transparent; border: 1px solid #333; color: #777; }
+        .modal-btn.cancel:hover { border-color: #555; color: #bbb; }
+        .modal-btn.save { background: #0078D4; border: 1px solid #0078D4; color: #fff; font-weight: 700; }
+        .modal-btn.save:hover { background: #0090f0; }
+        .setup-empty { font-family: 'DM Mono', monospace; font-size: 12px; color: #666; text-align: center; padding: 10px 0 6px; }
+
+        /* LOG */
+        .log-streak-banner { font-family: 'DM Mono', monospace; font-size: 12px; color: #ff6b35; background: rgba(255,107,53,.08); border: 1px solid rgba(255,107,53,.15); border-radius: 8px; padding: 8px 12px; margin-bottom: 14px; text-align: center; }
+        .log-day     { margin-bottom: 14px; }
+        .log-day-hdr { font-family: 'DM Mono', monospace; font-size: 12px; color: #888; letter-spacing: .06em; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .log-score.perfect { color: #5cba5c }
+        .log-score.partial { color: #ff9f1c }
+        .log-score.missed  { color: #e05555 }
+        .log-row    { display: flex; align-items: center; gap: 7px; padding: 5px 0; border-bottom: 1px solid #1a1a1d; }
+        .log-icon   { font-size: 13px; width: 20px; }
+        .log-name   { font-family: 'DM Mono', monospace; font-size: 12px; color: #888; flex: 1; }
+        .log-status { font-size: 13px; }
+        .log-empty  { font-family: 'DM Mono', monospace; font-size: 13px; color: #666; text-align: center; padding: 24px 0; }
+
+        /* Draggable — interactive elements opt out */
+        button, input, select, textarea, a, .task, .overlay, .modal { -webkit-app-region: no-drag; }
+        ::-webkit-scrollbar { width: 4px }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 99px }
+    </style>
+</head>
+
+<body>
+
+    <!-- MAIN WIDGET -->
+    <div class="widget" id="widget">
+        <div class="header">
+            <div class="brand"><span class="brand-name">real<span>buddy</span></span></div>
+            <div class="header-right">
+                <div class="streak-badge" id="streak-badge" style="display:none"></div>
+                <div class="progress-wrap">
+                    <span class="progress-text" id="progress-text">0/0</span>
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+                </div>
+                <button class="mood-btn" id="mood-btn" onclick="openLog()">😊</button>
+            </div>
+        </div>
+        <div class="date-pill" id="date-display"></div>
+        <div class="subtitle" id="subtitle">resets at midnight · tap emoji for log</div>
+        <div class="tasks" id="tasks-container"></div>
+        <div class="bottom-row">
+            <button class="action-btn" onclick="openEdit()">✎ edit</button>
+            <button class="action-btn" onclick="openLog()">📋 log</button>
+            <button class="action-btn" onclick="resetAll()">↺ reset</button>
+        </div>
+    </div>
+
+    <!-- SETUP OVERLAY — shown on first run -->
+    <div class="overlay" id="setup-overlay">
+        <div class="modal">
+            <h2>👋 Welcome to RealBuddy</h2>
+            <div class="modal-sub">Add the daily habits you want to track.<br>You can edit them anytime later.</div>
+            <div class="edit-hint">icon · name · hours · color</div>
+            <div id="setup-list"></div>
+            <button class="add-task-btn" onclick="addSetupTask()">+ add habit</button>
+            <div class="modal-btns">
+                <button class="modal-btn save" onclick="saveSetup()">get started →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT OVERLAY -->
+    <div class="overlay hidden" id="edit-overlay">
+        <div class="modal">
+            <h2>✎ Edit Tasks</h2>
+            <div class="edit-hint">icon · name · hours · color</div>
+            <div id="edit-list"></div>
+            <button class="add-task-btn" onclick="addEditTask()">+ add task</button>
+            <div class="modal-btns">
+                <button class="modal-btn cancel" onclick="closeEdit()">cancel</button>
+                <button class="modal-btn save"   onclick="saveEdit()">save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOG OVERLAY -->
+    <div class="overlay hidden" id="log-overlay">
+        <div class="modal">
+            <h2>📋 History Log</h2>
+            <div id="log-content"></div>
+            <div class="modal-btns">
+                <button class="modal-btn cancel" onclick="closeLog()">close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── AUDIO ──────────────────────────────────────────────────────────────────
+        let _actx = null;
+        function playShrine() {
+            try {
+                if (!_actx) _actx = new (window.AudioContext || window.webkitAudioContext)();
+                const ctx = _actx;
+                [[523.25,0],[659.25,.11],[783.99,.22],[1046.5,.33],[1318.51,.44],[1567.98,.55]].forEach(([f,t]) => {
+                    const o = ctx.createOscillator(), g = ctx.createGain();
+                    o.connect(g); g.connect(ctx.destination);
+                    o.type = 'sine'; o.frequency.value = f;
+                    g.gain.setValueAtTime(0, ctx.currentTime + t);
+                    g.gain.linearRampToValueAtTime(.15, ctx.currentTime + t + .03);
+                    g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + t + .55);
+                    o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + .6);
+                });
+            } catch(e) {}
+        }
+
+        // ── CONSTANTS ──────────────────────────────────────────────────────────────
+        const ACCENTS = ['#4fc3f7','#b39ddb','#80cbc4','#ff8a65','#f06292','#aed581','#ffb74d','#e57373','#4dd0e1','#ce93d8'];
+
+        const todayKey = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+        const prevKey  = (n=1) => { const d = new Date(); d.setDate(d.getDate()-n); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+        const fmt      = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+
+        // ── STATE ──────────────────────────────────────────────────────────────────
+        let tasks    = [];
+        let logData  = [];
+        let curDay   = todayKey();
+        let dayState = {};
+        let timers   = {};
+        let _dirty   = false;
+        let _renderInterval = null;
+
+        // ── PERSISTENCE ────────────────────────────────────────────────────────────
+        // Data is saved to JSON files in the user's app data folder:
+        //   tasks.json  — task definitions
+        //   logs.json   — 30-day history log
+        //   today.json  — current day's progress (done/elapsed)
+
+        function persistToday() {
+            window.electronAPI.writeJSON('today', { date: curDay, state: dayState });
+            _dirty = false;
+        }
+        function persistTasks() { window.electronAPI.writeJSON('tasks', tasks); }
+        function persistLog()   { window.electronAPI.writeJSON('logs',  logData); }
+
+        // Flush dirty state every 5 s — avoids writing on every timer tick
+        setInterval(() => { if (_dirty) persistToday(); }, 5000);
+
+        // ── HELPERS ────────────────────────────────────────────────────────────────
+        function freshState(taskList) {
+            const s = {};
+            (taskList || tasks).forEach(t => { s[t.id] = { done:false, elapsed:0, running:false }; });
+            return s;
+        }
+
+        // ── ARCHIVE ────────────────────────────────────────────────────────────────
+        function archiveDay(dateKey, taskSnap, stateSnap) {
+            const entry = {
+                date: dateKey,
+                tasks: taskSnap.map(t => ({
+                    id: t.id, icon: t.icon, name: t.name, hours: t.hours,
+                    done:    !!stateSnap[t.id]?.done,
+                    elapsed:   stateSnap[t.id]?.elapsed || 0
+                }))
+            };
+            const idx = logData.findIndex(e => e.date === dateKey);
+            if (idx >= 0) logData.splice(idx, 1);
+            logData.unshift(entry);
+            while (logData.length > 30) logData.pop();
+            persistLog();
+        }
+
+        // ── MIDNIGHT ───────────────────────────────────────────────────────────────
+        function checkDayChange() {
+            const td = todayKey();
+            if (td !== curDay) {
+                Object.keys(timers).forEach(id => { clearInterval(timers[id]); delete timers[id]; });
+                archiveDay(curDay, tasks, dayState);
+                curDay   = td;
+                dayState = freshState();
+                persistToday();
+                render();
+            }
+        }
+        setInterval(checkDayChange, 20000);
+
+        // ── STREAK ─────────────────────────────────────────────────────────────────
+        function calcStreak() {
+            const byDate = Object.fromEntries(logData.map(e => [e.date, e]));
+            let streak = 0;
+            for (let i = 1; i <= 30; i++) {
+                const e = byDate[prevKey(i)];
+                if (!e || !e.tasks.every(t => t.done)) break;
+                streak++;
+            }
+            const yEntry     = byDate[prevKey(1)];
+            const missedYest = yEntry ? yEntry.tasks.filter(t => !t.done) : [];
+            return { streak, missedYest };
+        }
+        function getMood(streak, missed) {
+            if (missed.length) return '😤';
+            if (streak >= 7)   return '🔥';
+            if (streak >= 3)   return '⚡';
+            if (streak >= 1)   return '✨';
+            return '😊';
+        }
+
+        // ── TIMERS ─────────────────────────────────────────────────────────────────
+        function startTimer(id) {
+            if (timers[id]) return;
+            timers[id] = setInterval(() => { dayState[id].elapsed++; _dirty = true; updateTaskDisplay(id); }, 1000);
+        }
+        function stopTimer(id) { clearInterval(timers[id]); delete timers[id]; }
+
+        function toggleTimer(id) {
+            if (dayState[id]?.done) return;
+            if (dayState[id].running) {
+                dayState[id].running = false; stopTimer(id);
+            } else {
+                tasks.forEach(t => {
+                    if (t.id !== id && dayState[t.id]?.running) {
+                        dayState[t.id].running = false; stopTimer(t.id); refreshTaskEl(t.id);
+                    }
+                });
+                dayState[id].running = true; startTimer(id);
+            }
+            _dirty = true; refreshTaskEl(id);
+        }
+
+        function refreshTaskEl(id) {
+            const s  = dayState[id];
+            const el = document.getElementById('task-' + id); if (!el) return;
+            el.classList.toggle('active', !!s.running);
+            const btn = el.querySelector('.btn.start');
+            if (btn) btn.textContent = s.running ? '⏸' : '▶';
+            el.querySelector('.timer-bar').style.display     = s.running ? 'block' : 'none';
+            el.querySelector('.timer-display').style.display = s.running ? 'block' : 'none';
+        }
+
+        function updateTaskDisplay(id) {
+            const task = tasks.find(t => t.id === id); if (!task) return;
+            const s     = dayState[id];
+            const total = (task.hours || 1) * 3600;
+            const pct   = Math.min(100, (s.elapsed / total) * 100);
+            const rem   = Math.max(0, total - s.elapsed);
+            const el    = document.getElementById('task-' + id); if (!el) return;
+            const fill  = el.querySelector('.timer-fill');
+            const disp  = el.querySelector('.timer-display');
+            const dur   = el.querySelector('.task-duration');
+            if (fill) fill.style.width = pct + '%';
+            if (disp) disp.textContent = `${fmt(rem)} left · ${Math.round(pct)}%`;
+            if (dur)  dur.textContent  = `${task.hours}h · ${fmt(s.elapsed)} elapsed`;
+        }
+
+        // ── MARK DONE ──────────────────────────────────────────────────────────────
+        function markDone(id, ev) {
+            if (dayState[id].running) { dayState[id].running = false; stopTimer(id); }
+            dayState[id].done = true;
+            persistToday();
+            playShrine(); spawnSparkles(ev); render();
+        }
+        function undoDone(id) { dayState[id].done = false; _dirty = true; render(); }
+
+        function spawnSparkles(ev) {
+            const pool = ['✨','⭐','🎉','💫','🌟','🍀','💛','🔥'];
+            const x = ev ? ev.clientX : window.innerWidth/2;
+            const y = ev ? ev.clientY : window.innerHeight/2;
+            for (let i = 0; i < 8; i++) setTimeout(() => {
+                const el = document.createElement('div'); el.className = 'sparkle';
+                el.textContent = pool[Math.floor(Math.random() * pool.length)];
+                el.style.left  = (x + (Math.random()-.5)*120) + 'px';
+                el.style.top   = (y + (Math.random()-.5)*70)  + 'px';
+                document.body.appendChild(el); setTimeout(() => el.remove(), 980);
+            }, i * 65);
+        }
+
+        // ── RESET ──────────────────────────────────────────────────────────────────
+        function resetAll() {
+            if (!confirm("Reset all of today's tasks and timers?")) return;
+            Object.keys(timers).forEach(id => { clearInterval(timers[id]); });
+            timers   = {};
+            dayState = freshState(tasks);
+            persistToday();
+            render();
+        }
+
+        // ── RENDER ─────────────────────────────────────────────────────────────────
+        function render() {
+            const { streak, missedYest } = calcStreak();
+            const mood = getMood(streak, missedYest);
+            const w    = document.getElementById('widget');
+
+            document.getElementById('mood-btn').textContent = mood;
+            document.getElementById('mood-btn').title = missedYest.length
+                ? `Missed yesterday: ${missedYest.map(t => t.name).join(', ')}`
+                : streak > 0 ? `${streak}-day streak!` : 'no streak yet';
+
+            w.className = 'widget';
+            if (streak >= 7)      w.classList.add('streak-fire');
+            else if (streak >= 3) w.classList.add('streak-hot');
+
+            const badge = document.getElementById('streak-badge');
+            if (streak > 0) { badge.style.display = 'inline'; badge.textContent = `🔥 ${streak}d`; }
+            else              badge.style.display = 'none';
+
+            const sub = document.getElementById('subtitle');
+            if (missedYest.length) {
+                const names = missedYest.slice(0,2).map(t => t.name).join(', ') + (missedYest.length > 2 ? ' +more' : '');
+                sub.textContent = `⚠️ missed yesterday: ${names}`; sub.className = 'subtitle warn';
+            } else {
+                sub.textContent = 'resets at midnight · tap emoji for log'; sub.className = 'subtitle';
+            }
+
+            const d  = new Date();
+            const DN = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+            const MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            document.getElementById('date-display').textContent = `${DN[d.getDay()]} ${MN[d.getMonth()]} ${d.getDate()}`;
+
+            const container = document.getElementById('tasks-container'); container.innerHTML = '';
+            tasks.forEach(task => {
+                if (!dayState[task.id]) dayState[task.id] = { done:false, elapsed:0, running:false };
+                const s     = dayState[task.id];
+                const total = (task.hours || 1) * 3600;
+                const pct   = Math.min(100, (s.elapsed / total) * 100);
+                const rem   = Math.max(0, total - s.elapsed);
+                const div   = document.createElement('div');
+                div.className = 'task' + (s.done ? ' done' : '') + (s.running ? ' active' : '');
+                div.style.setProperty('--accent', task.accent || '#0078D4');
+                div.id = 'task-' + task.id;
+                div.innerHTML = `
+      <div class="task-top">
+        <div class="task-left">
+          <div class="task-icon">${task.icon}</div>
+          <div>
+            <div class="task-name">${task.name}</div>
+            <div class="task-duration">${task.hours}h · ${s.done ? '✓ done' : fmt(s.elapsed) + ' elapsed'}</div>
+          </div>
+        </div>
+        <div class="task-buttons">
+          ${!s.done
+            ? `<button class="btn start" onclick="toggleTimer('${task.id}')">${s.running ? '⏸' : '▶'}</button>
+               <button class="btn done-btn" onclick="markDone('${task.id}',event)">✓</button>`
+            : `<button class="btn" onclick="undoDone('${task.id}')">undo</button>`}
+        </div>
+      </div>
+      <div class="timer-bar" style="display:${s.running?'block':'none'}">
+        <div class="timer-fill" style="width:${pct}%"></div>
+      </div>
+      <div class="timer-display" style="display:${s.running?'block':'none'}">${fmt(rem)} left · ${Math.round(pct)}%</div>`;
+                container.appendChild(div);
+            });
+
+            const done = tasks.filter(t => dayState[t.id]?.done).length;
+            document.getElementById('progress-text').textContent = `${done}/${tasks.length}`;
+            document.getElementById('progress-fill').style.width  = tasks.length ? (done/tasks.length*100)+'%' : '0%';
+        }
+
+        // ── SHARED ROW BUILDER ─────────────────────────────────────────────────────
+        function buildRow(t, i, arr) {
+            const removeFn = arr === 'editTasks'  ? `removeEditTask(${i})`  : `removeSetupTask(${i})`;
+            const accentFn = arr === 'editTasks'  ? `setEditAccent`         : `setSetupAccent`;
+            return `
+      <input class="icon-inp" type="text" value="${t.icon}" maxlength="2"
+             oninput="${arr}[${i}].icon=this.value" placeholder="🎯"/>
+      <input class="name-inp" type="text" value="${t.name}"
+             oninput="${arr}[${i}].name=this.value" placeholder="Habit name"/>
+      <input class="dur-inp" type="number" value="${t.hours}" min=".25" max="12" step=".25"
+             oninput="${arr}[${i}].hours=parseFloat(this.value)||1" title="hours"/>
+      <div class="accent-row">
+        ${ACCENTS.map(a=>`<div class="accent-swatch${a===t.accent?' sel':''}" style="background:${a}"
+          onclick="${accentFn}(${i},'${a}')"></div>`).join('')}
+      </div>
+      <button class="remove-btn" onclick="${removeFn}">✕</button>`;
+        }
+
+        // ── EDIT ───────────────────────────────────────────────────────────────────
+        let editTasks = [];
+        function openEdit()  { editTasks = JSON.parse(JSON.stringify(tasks)); renderEditList(); document.getElementById('edit-overlay').classList.remove('hidden'); }
+        function closeEdit() { document.getElementById('edit-overlay').classList.add('hidden'); }
+        function renderEditList() {
+            const list = document.getElementById('edit-list'); list.innerHTML = '';
+            editTasks.forEach((t, i) => {
+                const row = document.createElement('div'); row.className = 'task-edit-item';
+                row.style.borderLeft = `3px solid ${t.accent||'#0078D4'}`;
+                row.innerHTML = buildRow(t, i, 'editTasks');
+                list.appendChild(row);
+            });
+        }
+        function addEditTask()       { editTasks.push({ id:'t'+Date.now(), icon:'🎯', name:'New Task', hours:1, accent:ACCENTS[editTasks.length%ACCENTS.length] }); renderEditList(); }
+        function removeEditTask(i)   { editTasks.splice(i,1); renderEditList(); }
+        function setEditAccent(i, a) { editTasks[i].accent = a; renderEditList(); }
+        function saveEdit() {
+            tasks = editTasks.map(t => ({ ...t }));
+            persistTasks();
+            tasks.forEach(t => { if (!dayState[t.id]) dayState[t.id] = { done:false, elapsed:0, running:false }; });
+            persistToday();
+            closeEdit(); render();
+        }
+
+        // ── SETUP (first run) ──────────────────────────────────────────────────────
+        let setupTasks = [];
+        function showSetup() {
+            setupTasks = [];
+            renderSetupList();
+            document.getElementById('setup-overlay').classList.remove('hidden');
+        }
+        function renderSetupList() {
+            const list = document.getElementById('setup-list'); list.innerHTML = '';
+            if (!setupTasks.length) {
+                const hint = document.createElement('div'); hint.className = 'setup-empty';
+                hint.textContent = 'no habits yet — add one below';
+                list.appendChild(hint); return;
+            }
+            setupTasks.forEach((t, i) => {
+                const row = document.createElement('div'); row.className = 'task-edit-item';
+                row.style.borderLeft = `3px solid ${t.accent||'#0078D4'}`;
+                row.innerHTML = buildRow(t, i, 'setupTasks');
+                list.appendChild(row);
+            });
+        }
+        function addSetupTask()       { setupTasks.push({ id:'t'+Date.now(), icon:'🎯', name:'New Habit', hours:1, accent:ACCENTS[setupTasks.length%ACCENTS.length] }); renderSetupList(); }
+        function removeSetupTask(i)   { setupTasks.splice(i,1); renderSetupList(); }
+        function setSetupAccent(i, a) { setupTasks[i].accent = a; renderSetupList(); }
+        function saveSetup() {
+            if (!setupTasks.length) { alert('Add at least one habit to get started.'); return; }
+            tasks    = setupTasks.map(t => ({ ...t }));
+            dayState = freshState();
+            persistTasks();
+            persistToday();
+            document.getElementById('setup-overlay').classList.add('hidden');
+            render();
+            if (!_renderInterval) _renderInterval = setInterval(render, 60000);
+        }
+
+        // ── LOG ────────────────────────────────────────────────────────────────────
+        function openLog()  { renderLog(); document.getElementById('log-overlay').classList.remove('hidden'); }
+        function closeLog() { document.getElementById('log-overlay').classList.add('hidden'); }
+        function renderLog() {
+            const { streak } = calcStreak();
+            const content = document.getElementById('log-content'); content.innerHTML = '';
+            if (streak > 0) {
+                const b = document.createElement('div'); b.className = 'log-streak-banner';
+                b.textContent = streak>=7 ? `🔥 ${streak}-day perfect streak — you're on fire!`
+                              : streak>=3 ? `⚡ ${streak}-day streak — keep rolling!`
+                              :             `✨ ${streak}-day streak — nice start!`;
+                content.appendChild(b);
+            }
+            if (!logData.length) {
+                const e = document.createElement('div'); e.className = 'log-empty';
+                e.textContent = 'no history yet — finish your first day!';
+                content.appendChild(e); return;
+            }
+            const DN = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+            const MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            logData.forEach(entry => {
+                const doneCount = entry.tasks.filter(t => t.done).length, total = entry.tasks.length;
+                const perfect = doneCount===total, none = doneCount===0;
+                const [y,m,dd] = entry.date.split('-');
+                const dObj = new Date(+y, +m-1, +dd);
+                const block = document.createElement('div'); block.className = 'log-day';
+                block.innerHTML = `
+      <div class="log-day-hdr">
+        <span>${DN[dObj.getDay()]} ${MN[dObj.getMonth()]} ${dd}</span>
+        <span class="log-score ${perfect?'perfect':none?'missed':'partial'}">${perfect?'✓ perfect':none?'✗ all missed':`${doneCount}/${total} done`}</span>
+      </div>
+      ${entry.tasks.map(t=>`<div class="log-row"><div class="log-icon">${t.icon}</div><div class="log-name">${t.name}</div><div class="log-status">${t.done?'✅':'❌'}</div></div>`).join('')}`;
+                content.appendChild(block);
+            });
+        }
+
+        // ── BACKDROP CLOSE ────────────────────────────────────────────────────────
+        document.getElementById('edit-overlay').addEventListener('click', e => { if (e.target===e.currentTarget) closeEdit(); });
+        document.getElementById('log-overlay').addEventListener('click',  e => { if (e.target===e.currentTarget) closeLog();  });
+
+        // ── BOOT ───────────────────────────────────────────────────────────────────
+        async function boot() {
+            tasks = await window.electronAPI.readJSON('tasks');
+
+            if (!tasks || tasks.length === 0) {
+                // First run — show setup screen, skip main widget until user saves
+                showSetup();
+                return;
+            }
+
+            logData = await window.electronAPI.readJSON('logs') || [];
+
+            const saved = await window.electronAPI.readJSON('today');
+            if (saved && saved.date === curDay) {
+                dayState = saved.state || {};
+                // Running timers can't survive app restarts — clear them
+                Object.keys(dayState).forEach(id => { if (dayState[id].running) dayState[id].running = false; });
+            } else {
+                if (saved?.date && saved.date !== curDay) {
+                    // Previous day — archive before resetting
+                    archiveDay(saved.date, tasks, saved.state || {});
+                }
+                dayState = freshState();
+                persistToday();
+            }
+
+            render();
+            _renderInterval = setInterval(render, 60000);
+        }
+
+        boot();
+
+        // ── WIGGLE REMINDER ────────────────────────────────────────────────────────
+        // Shake the widget every 5 minutes when tasks are pending, but only if no
+        // timer is running (don't disturb focus sessions).
+        setInterval(() => {
+            const anyRunning = tasks.some(t => dayState[t.id]?.running);
+            const anyPending  = tasks.some(t => !dayState[t.id]?.done);
+            if (anyPending && !anyRunning) {
+                const w = document.getElementById('widget');
+                w.classList.add('shake');
+                setTimeout(() => w.classList.remove('shake'), 500);
+            }
+        }, 5 * 60 * 1000);
+    </script>
+</body>
+
+</html>

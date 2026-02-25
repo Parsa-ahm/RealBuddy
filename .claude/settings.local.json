@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Claude_Preview__preview_start",
+      "Bash(where:*)",
+      "Bash(python -c:*)",
+      "Bash(npm install:*)",
+      "Bash(node build-icon.js:*)"
+    ]
+  }
+}

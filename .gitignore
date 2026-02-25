@@ -1,0 +1,23 @@
+# Dependencies
+Widgit/node_modules/
+
+# Build output
+Widgit/dist/
+
+# Generated assets (built from Assets/Logo.svg)
+Widgit/assets/icon.ico
+Widgit/assets/icon.png
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*

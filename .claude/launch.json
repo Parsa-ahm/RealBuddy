@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "RealBuddy Widget (Preview)",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "3000", "--directory", "Widgit"],
+      "port": 3000
+    },
+    {
+      "name": "RealBuddy (Electron)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["start"],
+      "port": 0
+    }
+  ]
+}
