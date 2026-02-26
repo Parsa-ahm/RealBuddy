@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "RealBuddy productivity widget",
   "main": "main.js",
-  "author": "Parsa Ahmadizadeh",
+  "author": {
+    "name": "Parsa Ahmadizadeh",
+    "email": "parsa@example.com"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/Parsa-ahm/RealBuddy.git"
@@ -21,7 +24,13 @@
     "appId": "com.realbuddy.app",
     "productName": "RealBuddy",
     "directories": { "output": "dist" },
-    "files": ["**/*", "!dist/**"],
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "assets/**/*"
+    ],
+    "publish": null,
     "win": { "target": ["nsis", "portable"], "icon": "assets/icon.ico" },
     "mac": { "target": ["dmg", "zip"], "icon": "assets/icon.png", "category": "public.app-category.productivity" },
     "linux": { "target": ["AppImage", "deb"], "icon": "assets/icon.png" },
