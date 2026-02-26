@@ -45,15 +45,15 @@ After the next push to `main`, the site will be live at:
 
 3. The workflow will build Windows (.exe), macOS (.dmg), and Linux (.AppImage) and create a release with all installers.
 
-4. The Download button will then point to:  
+4. The Download button will then point to:
    **https://github.com/YOUR_USERNAME/RealBuddy/releases/latest**
 
 ## Summary
 
 | What | URL |
 |------|-----|
-| Website | `https://<owner>.github.io/RealBuddy/` |
-| Download (latest) | `https://github.com/<owner>/RealBuddy/releases/latest` |
-| Repo | `https://github.com/<owner>/RealBuddy` |
+| Website | `https://<username>.github.io/RealBuddy/` |
+| Download (latest) | `https://github.com/<username>/RealBuddy/releases/latest` |
+| Repo | `https://github.com/<username>/RealBuddy` |
 
 *(URLs are injected at deploy time from `github.repository` — no secrets in source.)*
